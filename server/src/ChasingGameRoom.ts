@@ -41,7 +41,8 @@ export class ChasingGameRoom extends Room<GameState> {
       }
 
       // Check if position is occupied
-      const occupied = Array.from(this.state.players.values()).some(
+      // Giants can move to occupied cells to catch players
+      const occupied = !player.isGiant && Array.from(this.state.players.values()).some(
         p => p.sessionId !== player.sessionId && p.x === newX && p.y === newY && !p.isCaught
       );
 
@@ -110,12 +111,12 @@ export class ChasingGameRoom extends Room<GameState> {
       this.waitingInterval = undefined;
     }
 
-    // Add AI players if needed (minimum 3 total players)
+    // Always fill to 8 players with AI
     const currentPlayers = this.state.players.size;
-    const minPlayers = 3;
+    const maxPlayers = 8;
     
-    if (currentPlayers < minPlayers) {
-      const aiNeeded = minPlayers - currentPlayers;
+    if (currentPlayers < maxPlayers) {
+      const aiNeeded = maxPlayers - currentPlayers;
       const aiCharacters = [0, 1, 2, 3, 4, 5, 6, 7];
       const usedCharacters = Array.from(this.state.players.values()).map(p => p.characterId);
       const availableCharacters = aiCharacters.filter(c => !usedCharacters.includes(c));
@@ -220,15 +221,10 @@ export class ChasingGameRoom extends Room<GameState> {
       newX = Math.max(0, Math.min(this.state.boardSize - 1, newX));
       newY = Math.max(0, Math.min(this.state.boardSize - 1, newY));
 
-      const occupied = Array.from(this.state.players.values()).some(
-        p => p.sessionId !== giant.sessionId && p.x === newX && p.y === newY && !p.isCaught
-      );
-
-      if (!occupied) {
-        giant.x = newX;
-        giant.y = newY;
-        this.checkCatches(giant);
-      }
+      // Giants can move to occupied cells to catch players
+      giant.x = newX;
+      giant.y = newY;
+      this.checkCatches(giant);
     }
   }
 
@@ -239,21 +235,38 @@ export class ChasingGameRoom extends Room<GameState> {
 
     const dx = runner.x - giant.x;
     const dy = runner.y - giant.y;
+    const distance = Math.abs(dx) + Math.abs(dy);
 
     let newX = runner.x;
     let newY = runner.y;
 
-    // Move away from giant
-    if (Math.abs(dx) > Math.abs(dy)) {
-      newX = runner.x + (dx > 0 ? 1 : -1);
-    } else if (dy !== 0) {
-      newY = runner.y + (dy > 0 ? 1 : -1);
+    // If giant is close (distance <= 2), prioritize escaping
+    if (distance <= 2) {
+      // Move away from giant on both axes if possible
+      const moveX = dx !== 0 ? (dx > 0 ? 1 : -1) : 0;
+      const moveY = dy !== 0 ? (dy > 0 ? 1 : -1) : 0;
+      
+      // Try to move on the axis with greater distance first
+      if (Math.abs(dx) >= Math.abs(dy) && moveX !== 0) {
+        newX = runner.x + moveX;
+      } else if (moveY !== 0) {
+        newY = runner.y + moveY;
+      } else if (moveX !== 0) {
+        newX = runner.x + moveX;
+      }
     } else {
-      // Random move if same position
-      const directions = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-      const dir = directions[Math.floor(Math.random() * directions.length)];
-      newX = runner.x + dir[0];
-      newY = runner.y + dir[1];
+      // Move away from giant
+      if (Math.abs(dx) > Math.abs(dy)) {
+        newX = runner.x + (dx > 0 ? 1 : -1);
+      } else if (dy !== 0) {
+        newY = runner.y + (dy > 0 ? 1 : -1);
+      } else {
+        // Random move if same position (shouldn't happen)
+        const directions = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+        const dir = directions[Math.floor(Math.random() * directions.length)];
+        newX = runner.x + dir[0];
+        newY = runner.y + dir[1];
+      }
     }
 
     newX = Math.max(0, Math.min(this.state.boardSize - 1, newX));
@@ -266,6 +279,33 @@ export class ChasingGameRoom extends Room<GameState> {
     if (!occupied) {
       runner.x = newX;
       runner.y = newY;
+    } else {
+      // If preferred move is blocked, try alternative moves
+      const alternativeMoves = [
+        [0, -1], [0, 1], [-1, 0], [1, 0] // up, down, left, right
+      ].map(([dx, dy]) => ({
+        x: Math.max(0, Math.min(this.state.boardSize - 1, runner.x + dx)),
+        y: Math.max(0, Math.min(this.state.boardSize - 1, runner.y + dy))
+      })).filter(pos => {
+        // Filter out current position and occupied positions
+        if (pos.x === runner.x && pos.y === runner.y) return false;
+        
+        // Check occupied
+        return !Array.from(this.state.players.values()).some(
+          p => p.sessionId !== runner.sessionId && p.x === pos.x && p.y === pos.y && !p.isCaught
+        );
+      }).sort((a, b) => {
+        // Sort by distance from giant (farther is better)
+        const distA = Math.abs(a.x - giant.x) + Math.abs(a.y - giant.y);
+        const distB = Math.abs(b.x - giant.x) + Math.abs(b.y - giant.y);
+        return distB - distA;
+      });
+
+      // Move to the best alternative position
+      if (alternativeMoves.length > 0) {
+        runner.x = alternativeMoves[0].x;
+        runner.y = alternativeMoves[0].y;
+      }
     }
   }
 

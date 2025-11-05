@@ -1,4 +1,4 @@
 {
-    "lobbyWaitingTime": 30,
-    "gamePlayTime": 180
+    "lobbyWaitingTime": 15,
+    "gamePlayTime": 90
 }

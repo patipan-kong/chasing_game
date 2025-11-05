@@ -154,6 +154,25 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/colyseus.js@0.15.0-preview.3/dist/colyseus.js"></script>
+    <script>
+        // Determine if we're in local development or production
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        if (isLocalDev) {
+            // Local development
+            window.serverUrl = `${window.location.protocol}//${window.location.hostname}:2567`;
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            window.wsUrl = `${protocol}//${host}:2567`;
+        } else {
+            // Production
+            window.serverUrl = `https://chasing-game-serv.onrender.com`;
+            window.wsUrl = `wss://chasing-game-serv.onrender.com`;
+        }
+        
+        console.log('Server URL:', window.serverUrl);
+        console.log('WebSocket URL:', window.wsUrl);
+    </script>
     <script src="game.js"></script>
 </body>
 </html>

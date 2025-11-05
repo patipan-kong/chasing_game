@@ -6,9 +6,7 @@ let selectedCharacter = null;
 let mySessionId = null;
 
 // Server configuration
-// const currentHostname = location.hostname;
-// const url = `ws://${currentHostname}:2567`;
-const url = `https://chasing-game-serv.onrender.com`;
+const url = window.serverUrl;
 
 // Load characters
 async function loadCharacters() {
