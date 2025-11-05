@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chasing Game - Multiplayer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="container">
+                <h1>🎮 Chasing Game</h1>
+                <p class="subtitle">A Multiplayer Chase Adventure</p>
+                
+                <div class="menu-buttons">
+                    <button class="btn btn-primary" onclick="showCharacterSelection()">
+                        ▶️ Play Game
+                    </button>
+                    <button class="btn btn-secondary" onclick="showHowToPlay()">
+                        📖 How to Play
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- How to Play Screen -->
+        <div id="howtoplay-screen" class="screen">
+            <div class="container">
+                <h1>📖 How to Play</h1>
+                
+                <div class="instructions">
+                    <div class="instruction-card">
+                        <h3>🎯 Objective</h3>
+                        <p><strong>Players:</strong> Survive until time runs out to win!</p>
+                        <p><strong>Giant (Chaser):</strong> Catch all players before time runs out to win!</p>
+                    </div>
+
+                    <div class="instruction-card">
+                        <h3>🎮 Gameplay</h3>
+                        <ul>
+                            <li>Choose your character from 8 unique options</li>
+                            <li>Auto-join a room and wait up to 30 seconds for other players</li>
+                            <li>One player (or AI) will be randomly assigned as the Giant</li>
+                            <li>Move using arrow buttons (up, down, left, right)</li>
+                            <li>Game board is 8×8 grid</li>
+                            <li>All players start at random positions</li>
+                            <li>Game duration: 3 minutes (180 seconds)</li>
+                        </ul>
+                    </div>
+
+                    <div class="instruction-card">
+                        <h3>🏆 Winning Conditions</h3>
+                        <ul>
+                            <li><strong>Players win:</strong> At least one player survives when time runs out</li>
+                            <li><strong>Giant wins:</strong> All players are caught before time runs out</li>
+                        </ul>
+                    </div>
+
+                    <div class="instruction-card">
+                        <h3>🤖 AI Players</h3>
+                        <p>If not enough players join within 30 seconds, AI players will be added to ensure an exciting game!</p>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" onclick="showWelcome()">
+                    ← Back
+                </button>
+            </div>
+        </div>
+
+        <!-- Character Selection Screen -->
+        <div id="character-screen" class="screen">
+            <div class="container">
+                <h1>Choose Your Character</h1>
+                <input type="text" id="player-name" class="input-name" placeholder="Enter your name" maxlength="15">
+                
+                <div id="character-grid" class="character-grid">
+                    <!-- Characters will be loaded here -->
+                </div>
+
+                <button class="btn btn-secondary" onclick="showWelcome()">
+                    ← Back
+                </button>
+            </div>
+        </div>
+
+        <!-- Waiting Room Screen -->
+        <div id="waiting-screen" class="screen">
+            <div class="container">
+                <h1>⏳ Waiting for Players...</h1>
+                <p class="timer-text">Game starts in: <span id="waiting-timer">30</span>s</p>
+                <p class="info-text">Room will auto-start with AI players if needed</p>
+                
+                <div id="waiting-players" class="waiting-players">
+                    <!-- Player list will be shown here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-container">
+                <div class="game-header">
+                    <div class="game-info">
+                        <h2>🎮 Chasing Game</h2>
+                        <div class="timer">⏱️ Time: <span id="game-timer">180</span>s</div>
+                    </div>
+                    <div class="player-info">
+                        <div id="role-info" class="role-badge">Your Role: Player</div>
+                        <div id="player-count" class="player-count">Players: 0</div>
+                    </div>
+                </div>
+
+                <div class="game-main">
+                    <div id="game-board" class="game-board">
+                        <!-- Game board cells will be generated here -->
+                    </div>
+
+                    <div class="controls">
+                        <h3>Controls</h3>
+                        <div class="direction-pad">
+                            <button class="dir-btn" onclick="move('up')">↑</button>
+                            <div class="dir-row">
+                                <button class="dir-btn" onclick="move('left')">←</button>
+                                <button class="dir-btn" onclick="move('down')">↓</button>
+                                <button class="dir-btn" onclick="move('right')">→</button>
+                            </div>
+                        </div>
+
+                        <div id="players-list" class="players-list">
+                            <h4>Players Status</h4>
+                            <div id="players-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen">
+            <div class="container">
+                <h1 id="game-result">Game Over</h1>
+                <p id="game-result-text" class="result-text"></p>
+                
+                <div class="menu-buttons">
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        🔄 Play Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/colyseus.js@0.15.0-preview.3/dist/colyseus.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
